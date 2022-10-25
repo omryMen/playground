@@ -5,10 +5,11 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/playground/pipeline"
 	"io"
 	"os"
 	"strconv"
+
+	"github.com/omryMen/playground/pipeline"
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 		return res
 	}
 	dest := fileWriter{filename: "output.csv"}
-	pipe := pipeline.CreatePipeline(pipeline.Config{Concurrency: 2, ChunkSize: 1}, &source, proccesor, &dest)
+	pipe := pipeline.Initialise(pipeline.Config{Concurrency: 2, ChunkSize: 1}, &source, proccesor, &dest)
 	fmt.Println(pipe.Run(context.Background()))
 }
 
