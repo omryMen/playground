@@ -21,7 +21,8 @@ type Item struct {
 }
 
 type Source interface {
-	List(ctx context.Context, offset, chunkSize int, sinkFn func(context.Context, []Item) error, close func())
+	List(ctx context.Context, offset, chunkSize int,
+		sinkFn func(context.Context, []Item) error, close func())
 }
 
 type Processor func(ctx context.Context, items []Item) []Item
@@ -42,7 +43,8 @@ type Pipeliner struct {
 	destination Destination
 }
 
-func Initialise(config Config, source Source, processor Processor, destination Destination) Pipeliner {
+func Initialize(config Config, source Source,
+	processor Processor, destination Destination) Pipeliner {
 
 	return Pipeliner{
 		config:      config,
@@ -90,16 +92,16 @@ func (p *Pipeliner) Run(ctx context.Context) error {
 	return nil
 }
 
-func parallel(ctx context.Context, numberOfPipes int, in chan []Item, fn func(ctx context.Context, items []Item) []Item) chan []Item {
+func parallel(ctx context.Context, numberOfPipes int, in chan []Item,
+	fn func(ctx context.Context, items []Item) []Item) chan []Item {
 	processedChan := make(chan []Item)
 	go func() {
+		defer close(processedChan)
 		wg := &sync.WaitGroup{}
 		wg.Add(numberOfPipes)
-
 		for i := 0; i < numberOfPipes; i++ {
 			go func(index int) {
 				defer wg.Done()
-
 				for {
 					select {
 					case <-ctx.Done():
@@ -117,9 +119,7 @@ func parallel(ctx context.Context, numberOfPipes int, in chan []Item, fn func(ct
 				}
 			}(i)
 		}
-
 		wg.Wait()
-
 	}()
 	return processedChan
 }
